@@ -1,8 +1,9 @@
-package example5
+package example6
 
 import groovy.transform.Immutable
 
 import java.util.concurrent.CompletableFuture
+import java.util.function.Function
 
 @Immutable(copyWith = true)
 class Doc {
@@ -11,20 +12,15 @@ class Doc {
 
 class Resource extends HashMap {}
 
-interface Webservice {
-  CompletableFuture<Resource> create(Doc doc)
-}
-
 class FeedHandler {
 
-  Webservice webservice
-
-  List<Doc> handle(List<Doc> changes) {
+  List<Doc> handle(List<Doc> changes,
+    Function<Doc, CompletableFuture<Resource>> creator) {
 
     changes
       .findAll { doc -> isImportant(doc) }
       .collect { doc ->
-        createResource(doc)
+        creator.apply(doc)
         .thenApply { resource ->
           setToProcessed(doc, resource)
         }
@@ -33,10 +29,6 @@ class FeedHandler {
         }
         .get()
       }
-  }
-
-  private CompletableFuture<Resource> createResource(doc) {
-    webservice.create(doc)
   }
   
   private static boolean isImportant(doc) {
