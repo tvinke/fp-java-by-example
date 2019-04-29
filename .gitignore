@@ -2,3 +2,5 @@
 .idea
 *.iml
 out
+*.class
+build
